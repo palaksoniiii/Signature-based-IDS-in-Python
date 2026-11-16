@@ -1,0 +1,19 @@
+# Signature rules  -  action proto src_ip src_port -> dst_ip dst_port (options)
+# Options: msg sid severity content nocase pcre flags itype dsize threshold
+
+# --- Web attacks -------------------------------------------------------------
+alert tcp any any -> any 80 (msg:"SQL injection: UNION SELECT"; content:"union"; content:"select"; nocase; severity:high; sid:1001;)
+alert tcp any any -> any 80 (msg:"SQL injection: tautology"; pcre:"/(\'|%27)\s*or\s*(\'|%27)?1(\'|%27)?\s*=\s*(\'|%27)?1/i"; severity:high; sid:1002;)
+alert tcp any any -> any 80 (msg:"XSS: script tag in request"; content:"<script"; nocase; severity:medium; sid:1003;)
+alert tcp any any -> any 80 (msg:"Directory traversal"; content:"../.."; severity:high; sid:1004;)
+alert tcp any any -> any 80 (msg:"Shellshock exploit attempt"; content:"() {"; severity:high; sid:1005;)
+alert tcp any any -> any 80 (msg:"Scanner user-agent: Nmap"; content:"Nmap Scripting Engine"; nocase; severity:low; sid:1006;)
+
+# --- Reconnaissance / brute force (threshold = count within seconds) ---------
+alert tcp any any -> any 22 (msg:"SSH brute force: 5 SYNs in 10s"; flags:S; threshold:track by_src, count 5, seconds 10; severity:high; sid:2001;)
+alert tcp any any -> any any (msg:"TCP SYN port scan: 15 SYNs in 5s"; flags:S; threshold:track by_src, count 15, seconds 5; severity:medium; sid:2002;)
+alert icmp any any -> any any (msg:"ICMP ping sweep: 3 echo requests in 5s"; itype:8; threshold:track by_src, count 3, seconds 5; severity:low; sid:2003;)
+alert icmp any any -> any any (msg:"Oversized ICMP echo (possible tunnel / ping of death)"; itype:8; dsize:>1000; severity:medium; sid:2004;)
+
+# --- Suspicious ports --------------------------------------------------------
+alert tcp any any -> any 4444 (msg:"Traffic to port 4444 (common reverse shell)"; severity:high; sid:3001;)

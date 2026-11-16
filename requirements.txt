@@ -1,0 +1,1 @@
+scapy>=2.5      # only needed for --live and --pcap; --demo and the tests need nothing
